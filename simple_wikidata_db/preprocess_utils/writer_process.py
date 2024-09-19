@@ -26,7 +26,7 @@ class Table:
     def write(self, json_value: List[Dict[str, Any]]):
         if self.cur_file_writer is None:
             self.cur_file_writer = open(self.cur_file, 'w', encoding='utf-8')
-        for json_obj in json_value:
+        for json_obj in json_value: #?
             print(json_obj)
             self.cur_file_writer.write(ujson.dumps(json_obj, ensure_ascii=False) + '\n')
         self.cur_num_lines += 1
