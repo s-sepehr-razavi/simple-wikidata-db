@@ -14,11 +14,44 @@ import multiprocessing
 from multiprocessing import Queue, Process
 from pathlib import Path
 import time
+import sys
 
 from simple_wikidata_db.preprocess_utils.reader_process import count_lines, read_data
 from simple_wikidata_db.preprocess_utils.worker_process import process_data
 from simple_wikidata_db.preprocess_utils.writer_process import write_data
+from SPARQLWrapper import SPARQLWrapper, JSON
 
+
+
+# https://rdflib.github.io/sparqlwrapper/
+
+def language_restricted_properties(language):
+  endpoint_url = "https://query.wikidata.org/sparql"
+
+  query = """SELECT ?property WHERE {
+    ?property a wikibase:Property.
+    ?property rdfs:label ?propertyLabel.
+    FILTER(LANG(?propertyLabel) = "%s").
+  }
+  """ % (language)
+
+
+  def get_results(endpoint_url, query):
+      user_agent = "WDQS-example Python/%s.%s" % (sys.version_info[0], sys.version_info[1])
+      # TODO adjust user agent; see https://w.wiki/CX6
+      sparql = SPARQLWrapper(endpoint_url, agent=user_agent)
+      sparql.setQuery(query)
+      sparql.setReturnFormat(JSON)
+      return sparql.query().convert()
+
+
+  results = get_results(endpoint_url, query)
+  properties = []
+
+  for result in results["results"]["bindings"]:
+      properties.append(result['property']['value'].split('/')[-1])
+  
+  return set(properties)
 
 def get_arg_parser():
     parser = argparse.ArgumentParser()
@@ -58,6 +91,10 @@ def main():
     # Queues for inputs/outputs
     output_queue = Queue(maxsize=maxsize)
     work_queue = Queue(maxsize=maxsize)
+
+    # List of persian properties
+    
+    restricted_properties = language_restricted_properties(args.language_id)
 
     # Processes for reading/processing/writing
     num_lines_read = multiprocessing.Value("i", 0)

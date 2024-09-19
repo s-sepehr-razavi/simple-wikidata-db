@@ -13,7 +13,7 @@ ALIAS_PROPERTIES = {'P138', 'P734', 'P735', 'P742', 'P1448', 'P1449', 'P1477', '
                     'P2358', 'P2359', 'PP2365', 'P2366', 'P2521', 'P2562', 'P2976', 'PP3321', 'P4239', 'P4284',
                     'P4970', 'P5056', 'P5278', 'PP6978', 'P7383'}
 
-PERSIAN_PROPERTIES = {'P138'} #TODO
+RESTRICTED_PROPERTIES = {'P138 '} #TODO maybe use a shared memory
 
 # data types in wikidata dump which we ignore
 IGNORE = {'wikibase-lexeme', 'musical-notation', 'globe-coordinate', 'commonsMedia', 'geo-shape', 'wikibase-sense',
@@ -187,7 +187,7 @@ def minimized_process_json(obj, language_id="fa"):
             if value is None:
                 continue
 
-            if datatype == 'wikibase-item' and property_id in PERSIAN_PROPERTIES:
+            if datatype == 'wikibase-item' and property_id in RESTRICTED_PROPERTIES:
                 out_data['entity_rels'].append({
                     'claim_id': claim_id,
                     'qid': id,
@@ -205,7 +205,8 @@ def minimized_process_json(obj, language_id="fa"):
 
 
 
-def process_data(language_id: str, work_queue: Queue, out_queue: Queue):
+def process_data(language_id: str, work_queue: Queue, out_queue: Queue, restricted_properties):
+    RESTRICTED_PROPERTIES = restricted_properties
     while True:
         json_obj = work_queue.get()
         if json_obj is None:
