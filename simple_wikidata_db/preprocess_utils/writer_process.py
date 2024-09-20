@@ -9,6 +9,8 @@ TABLE_NAMES = [
     'labels', 'descriptions', 'aliases', 'external_ids', 'entity_values', 'qualifiers', 'wikipedia_links', 'entity_rels'
 ]
 
+MINIMIZED_TABLE_NAMES = ['aliases', 'entity_rels']
+
 
 class Table:
     def __init__(self, path: Path, batch_size: int, table_name: str):
@@ -27,7 +29,7 @@ class Table:
         if self.cur_file_writer is None:
             self.cur_file_writer = open(self.cur_file, 'w', encoding='utf-8')
         for json_obj in json_value: #?
-            print(json_obj)
+            # print(json_obj)
             self.cur_file_writer.write(ujson.dumps(json_obj, ensure_ascii=False) + '\n')
         self.cur_num_lines += 1
         if self.cur_num_lines >= self.batch_size:
@@ -42,14 +44,15 @@ class Table:
 
 
 class Writer:
-    def __init__(self, path: Path, batch_size: int, total_num_lines: int):
+    def __init__(self, path: Path, batch_size: int, total_num_lines: int, mini:bool):
         self.cur_num_lines = 0
         self.total_num_lines = total_num_lines
         self.start_time = time.time()
-        self.output_tables = {table_name: Table(path, batch_size, table_name) for table_name in TABLE_NAMES}
+        self.output_tables = {table_name: Table(path, batch_size, table_name) for table_name in (MINIMIZED_TABLE_NAMES if mini else TABLE_NAMES)}
 
-    def write(self, json_object: Dict[str, Any]):
+    def write(self, json_object: Dict[str, Any]):        
         self.cur_num_lines += 1
+        print(self.cur_num_lines)
         for key, value in json_object.items():
             if len(value) > 0:
                 self.output_tables[key].write(value)
@@ -65,8 +68,8 @@ class Writer:
             v.close()
 
 
-def write_data(path: Path, batch_size: int, total_num_lines: int, outout_queue: Queue):
-    writer = Writer(path, batch_size, total_num_lines)
+def write_data(path: Path, batch_size: int, total_num_lines: int, outout_queue: Queue, mini: bool):
+    writer = Writer(path, batch_size, total_num_lines, mini)
     while True:
         json_object = outout_queue.get()
         if json_object is None:

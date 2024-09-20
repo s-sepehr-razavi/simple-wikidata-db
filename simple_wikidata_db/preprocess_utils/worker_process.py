@@ -122,7 +122,7 @@ def process_json(obj, language_id="en"):
                     'property_id': property_id,
                     'value': value
                 })
-                if property_id in ALIAS_PROPERTIES:
+                if property_id in ALIAS_PROPERTIES:                    
                     out_data['aliases'].append({
                         'qid': id,
                         'alias': value,
@@ -148,32 +148,36 @@ def process_json(obj, language_id="en"):
     return dict(out_data)
 
 
-def minimized_process_json(obj, language_id="fa"):
+def minimized_process_json(obj, language_id="fa"):    
     out_data = defaultdict(list)
     # skip properties
     if obj['type'] == 'property':
         return {}
+    
+    aliases = {}
+    l = []
     id = obj['id']  # The canonical ID of the entity.
     # extract labels
     if language_id in obj['labels']:
         label = obj['labels'][language_id]['value']
-        out_data['labels'].append({
-            'qid': id,
-            'label': label
-        })
-        out_data['aliases'].append({
-            'qid': id,
-            'alias': label
-        })
+        
+        # out_data['aliases'].append({
+        #     'qid': id,
+        #     'alias': label
+        # })
+        l.append(label)
     
+    out_data['aliases'].append(aliases)
 
     # extract aliases
     if language_id in obj['aliases']:
-        for alias in obj['aliases'][language_id]:
-            out_data['aliases'].append({
-                'qid': id,
-                'alias': alias['value'],
-            })
+        for alias in obj['aliases'][language_id]:            
+            # out_data['aliases'].append({
+            #     'qid': id,
+            #     'alias': alias['value'],
+            # })
+            l.append(alias['value'])
+    aliases[id] = l 
 
     # extract claims
     for property_id in obj['claims']:
@@ -186,7 +190,7 @@ def minimized_process_json(obj, language_id="fa"):
 
             if value is None:
                 continue
-
+            
             if datatype == 'wikibase-item' and property_id in RESTRICTED_PROPERTIES:
                 out_data['entity_rels'].append({
                     'claim_id': claim_id,
@@ -194,18 +198,19 @@ def minimized_process_json(obj, language_id="fa"):
                     'property_id': property_id,
                     'value': value
                 })            
-            else:                
-                if property_id in ALIAS_PROPERTIES:
-                    out_data['aliases'].append({
-                        'qid': id,
-                        'alias': value,
-                    })
-
+            # elif datatype == 'entity-values':               
+            #     if property_id in ALIAS_PROPERTIES:
+            #         print(id, value)
+            #         out_data['aliases'].append({
+            #             'qid': id,
+            #             'alias': value,
+            #         })    
     return dict(out_data)
 
 
 
-def process_data(language_id: str, work_queue: Queue, out_queue: Queue, restricted_properties):
+def process_data(language_id: str, work_queue: Queue, out_queue: Queue, restricted_properties, mini:bool):        
+    global RESTRICTED_PROPERTIES
     RESTRICTED_PROPERTIES = restricted_properties
     while True:
         json_obj = work_queue.get()
@@ -213,5 +218,6 @@ def process_data(language_id: str, work_queue: Queue, out_queue: Queue, restrict
             break
         if len(json_obj) == 0:
             continue
-        out_queue.put(process_json(ujson.loads(json_obj), language_id))
+        out_queue.put(minimized_process_json(ujson.loads(json_obj), language_id,) if mini else process_json(ujson.loads(json_obj)))
     return
+

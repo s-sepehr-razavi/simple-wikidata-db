@@ -63,12 +63,14 @@ def get_arg_parser():
     parser.add_argument('--num_lines_read', type=int, default=-1,
                         help='Terminate after num_lines_read lines are read. Useful for debugging.')
     parser.add_argument('--num_lines_in_dump', type=int, default=-1, help='Number of lines in dump. If -1, we will count the number of lines.')
+    parser.add_argument("--mini", action='store_true', help='generating minimized version of the output')
     return parser
 
 
 def main():
     start = time.time()    
     args = get_arg_parser().parse_args()
+    input()
     print(f"ARGS: {args}")
 
     out_dir = Path(args.out_dir)
@@ -93,8 +95,7 @@ def main():
     work_queue = Queue(maxsize=maxsize)
 
     # List of persian properties
-    restricted_properties = language_restricted_properties(args.language_id)
-    print(restricted_properties)
+    restricted_properties = language_restricted_properties(args.language_id)    
 
     # Processes for reading/processing/writing
     num_lines_read = multiprocessing.Value("i", 0)
@@ -107,15 +108,16 @@ def main():
     
     write_process = Process(
         target=write_data,
-        args=(out_dir, args.batch_size, total_num_lines, output_queue)
+        args=(out_dir, args.batch_size, total_num_lines, output_queue, args.mini)
     )
     write_process.start()
 
     work_processes = []
+    print(args.mini)
     for _ in range(max(1, args.processes-2)):
         work_process = Process(
             target=process_data,
-            args=(args.language_id, work_queue, output_queue, restricted_properties)
+            args=(args.language_id, work_queue, output_queue, restricted_properties, args.mini)
         )
         work_process.daemon = True
         work_process.start()
@@ -137,3 +139,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    input()
