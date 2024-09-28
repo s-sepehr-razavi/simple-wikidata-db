@@ -18,7 +18,7 @@ def count_lines(input_file: Path, max_lines_to_read: int):
             break
     return cnt
 
-def read_data(input_file: Path, num_lines_read: Value, max_lines_to_read: int, work_queue: Queue):
+def read_data(input_file: Path, num_lines_read: Value, max_lines_to_read: int, work_queue: Queue, pre_read_lines):
     """
     Reads the data from the input file and pushes it to the output queue.
     :param input_file: Path to the input file.
@@ -35,6 +35,9 @@ def read_data(input_file: Path, num_lines_read: Value, max_lines_to_read: int, w
 
     num_lines = 0
     for ln in f:
+        while num_lines <= pre_read_lines:
+            num_lines += 1
+            continue
         if ln == b"[\n" or ln == b"]\n":
             continue
         if ln.endswith(b",\n"):  # all but the last element

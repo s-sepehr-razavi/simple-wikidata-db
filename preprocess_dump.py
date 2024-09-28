@@ -15,6 +15,7 @@ from multiprocessing import Queue, Process
 from pathlib import Path
 import time
 import sys
+import os
 
 from simple_wikidata_db.preprocess_utils.reader_process import count_lines, read_data
 from simple_wikidata_db.preprocess_utils.worker_process import process_data
@@ -75,6 +76,14 @@ def main():
     out_dir = Path(args.out_dir)
     out_dir.mkdir(exist_ok=True, parents=True)
 
+    path_to_count = os.path.join(out_dir, 'readObjCount.txt')
+    pre_read_lines = 0
+    if os.path.exists(path_to_count):
+        # Open and read the file
+        with open(path_to_count, 'r') as file:
+            pre_read_lines = (int)(file.read())  # You can use read(), readline(), or readlines() depending on your need
+            print(pre_read_lines)
+
     input_file = Path(args.input_file)
     assert input_file.exists(), f"Input file {input_file} does not exist"
 
@@ -100,14 +109,14 @@ def main():
     num_lines_read = multiprocessing.Value("i", 0)
     read_process = Process(
         target=read_data,
-        args=(input_file, num_lines_read, max_lines_to_read, work_queue)
+        args=(input_file, num_lines_read, max_lines_to_read, work_queue, pre_read_lines)
     )
 
     read_process.start()
     
     write_process = Process(
         target=write_data,
-        args=(out_dir, args.batch_size, total_num_lines, output_queue, args.mini)
+        args=(out_dir, args.batch_size, total_num_lines, output_queue, args.mini, pre_read_lines)
     )
     write_process.start()
 
