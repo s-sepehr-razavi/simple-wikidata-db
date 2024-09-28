@@ -52,7 +52,7 @@ class Writer:
 
     def write(self, json_object: Dict[str, Any]):        
         self.cur_num_lines += 1
-        print(self.cur_num_lines)
+        # print(self.cur_num_lines)
         for key, value in json_object.items():
             if len(value) > 0:
                 self.output_tables[key].write(value)

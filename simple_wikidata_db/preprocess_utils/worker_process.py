@@ -218,6 +218,6 @@ def process_data(language_id: str, work_queue: Queue, out_queue: Queue, restrict
             break
         if len(json_obj) == 0:
             continue
-        out_queue.put(minimized_process_json(ujson.loads(json_obj), language_id,) if mini else process_json(ujson.loads(json_obj)))
+        out_queue.put(minimized_process_json(ujson.loads(json_obj), language_id,) if mini else process_json(ujson.loads(json_obj), language_id))
     return
 

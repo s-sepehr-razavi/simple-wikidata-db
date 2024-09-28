@@ -67,10 +67,9 @@ def get_arg_parser():
     return parser
 
 
-def main():
+def main():    
     start = time.time()    
-    args = get_arg_parser().parse_args()
-    input()
+    args = get_arg_parser().parse_args()    
     print(f"ARGS: {args}")
 
     out_dir = Path(args.out_dir)
@@ -113,7 +112,7 @@ def main():
     write_process.start()
 
     work_processes = []
-    print(args.mini)
+    # print(args.mini)
     for _ in range(max(1, args.processes-2)):
         work_process = Process(
             target=process_data,
@@ -139,4 +138,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-    input()
+    # input()
