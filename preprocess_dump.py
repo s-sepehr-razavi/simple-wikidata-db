@@ -26,7 +26,7 @@ from SPARQLWrapper import SPARQLWrapper, JSON
 
 # https://rdflib.github.io/sparqlwrapper/
 
-def language_restricted_properties(language):
+def language_restricted_properties(language, out_dir):
   endpoint_url = "https://query.wikidata.org/sparql"
 
   query = """SELECT ?property WHERE {
@@ -44,13 +44,24 @@ def language_restricted_properties(language):
       sparql.setQuery(query)
       sparql.setReturnFormat(JSON)
       return sparql.query().convert()
-
-
-  results = get_results(endpoint_url, query)
+  
+  path = os.path.join(out_dir, language + "Props.txt")
   properties = []
 
-  for result in results["results"]["bindings"]:
-      properties.append(result['property']['value'].split('/')[-1])
+  if os.path.exists(path):
+      with open(path, 'r') as file:
+          for p in file:
+            properties.append(p)
+  else:
+      
+    results = get_results(endpoint_url, query)
+
+    for result in results["results"]["bindings"]:
+        properties.append(result['property']['value'].split('/')[-1])
+  
+    with open(path, 'w') as file:
+        for p in properties:
+            file.write(f"{p}\n")
   
   return set(properties)
 
@@ -103,7 +114,7 @@ def main():
     work_queue = Queue(maxsize=maxsize)
 
     # List of persian properties
-    restricted_properties = language_restricted_properties(args.language_id)    
+    restricted_properties = language_restricted_properties(args.language_id, out_dir)    
 
     # Processes for reading/processing/writing
     num_lines_read = multiprocessing.Value("i", 0)
