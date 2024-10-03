@@ -27,7 +27,7 @@ class Table:
         self.cur_file_writer = None
 
     def write(self, json_value: List[Dict[str, Any]]):
-        print(self.cur_file)
+        # print(self.cur_file)
         if self.cur_file_writer is None:
             self.cur_file_writer = open(self.cur_file, 'a', encoding='utf-8')
         for json_obj in json_value: #?

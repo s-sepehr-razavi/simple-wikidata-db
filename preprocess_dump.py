@@ -93,7 +93,7 @@ def main():
         # Open and read the file
         with open(path_to_count, 'r') as file:
             pre_read_lines = (int)(file.read())  # You can use read(), readline(), or readlines() depending on your need
-            print(pre_read_lines)
+            # print(pre_read_lines)
 
     input_file = Path(args.input_file)
     assert input_file.exists(), f"Input file {input_file} does not exist"

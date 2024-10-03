@@ -36,7 +36,7 @@ def read_data(input_file: Path, num_lines_read: Value, max_lines_to_read: int, w
     counter = 1
     num_lines = 0
     for ln in f:
-        print(counter)
+        # print(counter)
         # print(ln)
         if ln == b"[\n" or ln == b"]\n":
             continue
