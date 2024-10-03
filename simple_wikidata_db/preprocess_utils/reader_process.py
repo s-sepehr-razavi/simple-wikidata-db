@@ -33,12 +33,15 @@ def read_data(input_file: Path, num_lines_read: Value, max_lines_to_read: int, w
     else:
         raise ValueError(f"The file must be either .bz2 or .gz, but got {input_file.suffix}.")
 
+    counter = 1
     num_lines = 0
     for ln in f:
-        while num_lines <= pre_read_lines:
-            num_lines += 1
-            continue
+        print(counter)
+        # print(ln)
         if ln == b"[\n" or ln == b"]\n":
+            continue
+        if counter <= pre_read_lines: #BUG when 0 0 
+            counter += 1
             continue
         if ln.endswith(b",\n"):  # all but the last element
             obj = ln[:-2]

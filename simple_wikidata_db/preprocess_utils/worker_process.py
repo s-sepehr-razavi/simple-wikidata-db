@@ -180,6 +180,7 @@ def minimized_process_json(obj, language_id="fa"):
     aliases[id] = l 
 
     # extract claims
+    # print(obj['claims'])
     for property_id in obj['claims']:
         for claim in obj['claims'][property_id]:
             if not claim['mainsnak']['snaktype'] == 'value':
@@ -191,13 +192,21 @@ def minimized_process_json(obj, language_id="fa"):
             if value is None:
                 continue
             
+            # print(RESTRICTED_PROPERTIES)
             if datatype == 'wikibase-item' and property_id in RESTRICTED_PROPERTIES:
                 out_data['entity_rels'].append({
                     'claim_id': claim_id,
                     'qid': id,
                     'property_id': property_id,
                     'value': value
-                })            
+                })
+                          
+                # print({
+                #         'claim_id': claim_id,
+                #         'qid': id,
+                #         'property_id': property_id,
+                #         'value': value
+                #     })  
             # elif datatype == 'entity-values':               
             #     if property_id in ALIAS_PROPERTIES:
             #         print(id, value)
@@ -205,6 +214,7 @@ def minimized_process_json(obj, language_id="fa"):
             #             'qid': id,
             #             'alias': value,
             #         })    
+    # print(obj)
     return dict(out_data)
 
 

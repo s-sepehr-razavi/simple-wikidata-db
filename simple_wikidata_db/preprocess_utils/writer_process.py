@@ -16,9 +16,9 @@ MINIMIZED_TABLE_NAMES = ['aliases', 'entity_rels']
 class Table:
     def __init__(self, path: Path, batch_size: int, table_name: str, index:int, cur_num_lines:int):
         self.table_dir = path / table_name
-        if self.table_dir.exists():
-            shutil.rmtree(self.table_dir)
-        self.table_dir.mkdir(parents=True, exist_ok=False)
+        if not self.table_dir.exists():
+        #     shutil.rmtree(self.table_dir)
+            self.table_dir.mkdir(parents=True, exist_ok=False)
 
         self.index = index
         self.cur_num_lines = cur_num_lines
@@ -27,8 +27,9 @@ class Table:
         self.cur_file_writer = None
 
     def write(self, json_value: List[Dict[str, Any]]):
+        print(self.cur_file)
         if self.cur_file_writer is None:
-            self.cur_file_writer = open(self.cur_file, 'w', encoding='utf-8')
+            self.cur_file_writer = open(self.cur_file, 'a', encoding='utf-8')
         for json_obj in json_value: #?
             # print(json_obj)
             self.cur_file_writer.write(ujson.dumps(json_obj, ensure_ascii=False) + '\n')
@@ -57,6 +58,7 @@ class Writer:
         self.cur_num_lines += 1
         # print(self.cur_num_lines)
         for key, value in json_object.items():
+            # print(key, value)                    
             if len(value) > 0:
                 self.output_tables[key].write(value)
         if self.cur_num_lines % 200000 == 0:
@@ -68,6 +70,8 @@ class Writer:
 
     def close(self):
         for v in self.output_tables.values():
+            # print(v.cur_file_writer)
+            # print(v.table_dir)
             v.close()
 
 
@@ -77,11 +81,11 @@ def write_data(path: Path, batch_size: int, total_num_lines: int, outout_queue: 
 
     while True:
         json_object = outout_queue.get()
+        # print(json_object)
         if json_object is None:
             break
         writer.write(json_object)    
-        pre_read_lines += 1
-        if pre_read_lines % 200000:
-            with open(path_to_count, 'w') as file:
-                file.write((str)(pre_read_lines))
+        pre_read_lines += 1        
+        with open(path_to_count, 'w') as file:
+            file.write((str)(pre_read_lines))
     writer.close()

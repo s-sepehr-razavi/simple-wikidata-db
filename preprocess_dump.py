@@ -51,7 +51,7 @@ def language_restricted_properties(language, out_dir):
   if os.path.exists(path):
       with open(path, 'r') as file:
           for p in file:
-            properties.append(p)
+            properties.append(p.strip())
   else:
       
     results = get_results(endpoint_url, query)
@@ -61,7 +61,7 @@ def language_restricted_properties(language, out_dir):
   
     with open(path, 'w') as file:
         for p in properties:
-            file.write(f"{p}\n")
+            file.write(p + '\n')
   
   return set(properties)
 
