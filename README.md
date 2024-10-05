@@ -71,7 +71,7 @@ Each table is stored in a directory, where the content of the table is written t
 If you want to use docker for running the program, first you should build the image using `docker run` command. Then one should use the following command to run the program with docker:
 
 ```
-docker run
+docker run \
 -v [path to the directory that contains wikidata dump]:/app/input \
 -v [path to output directory]:/app/output \
 [image name] \
