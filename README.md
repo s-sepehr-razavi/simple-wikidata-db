@@ -31,6 +31,7 @@ python3 preprocess_dump.py \
     --out_dir $DIR_TO_SAVE_DATA_TO \
     --batch_size $BATCH_SIZE \
     --language_id $LANG
+    --mini
 ```
 
 These arguments are: 
@@ -39,7 +40,8 @@ These arguments are:
 - 'num_lines_read': number of lines to read. Useful for debuggin.
 - `num_lines_in_dump`: specifies the total number of lines in the uncompressed json file. This is used by a tqdm bar to track progress. As of January 2022, there are 95,980,335 lines in latest-all.json. It takes about ~21 minutes to run `wc -l latest-all.json`. 
 - `batch_size`: The number of triples to write into each batch file that is saved under a table directory. 
-- `language_id`: The language to use when extracting entity labels, aliases, descriptions, and wikipedia links 
+- `language_id`: The language to use when extracting entity labels, aliases, descriptions, and wikipedia links
+-  `mini`: The flag that makes the output minimized (only alises and relations)
 
 Additionally, running with the flag `--test` will terminate after processing an initial chunk, allowing you to verify results. 
 
@@ -64,6 +66,22 @@ The Wikidata dump is made available as a single, unweildy JSON file. To make que
 <br><br>
 Each table is stored in a directory, where the content of the table is written to multiple jsonl files stored inside the directory (each file contains a subset of the rows in the table). Each line in the file corresponds to a different triple. Partitioning the table's contents into multiple files improves querying speed--we can process each file in parallel. 
 
+## Running with docker 
+
+If you want to use docker for running the program, first you should build the image using `docker run` command. Then one should use the following command to run the program with docker:
+
+```
+docker run
+-v [path to the directory that contains wikidata dump]:/app/input \
+-v [path to output directory]:/app/output \
+[image name] \
+python3 preprocess_dump.py \ 
+    --input_file $PATH_TO_COMPRESSED_WIKI_JSON \
+    --out_dir $DIR_TO_SAVE_DATA_TO \
+    --batch_size $BATCH_SIZE \
+    --language_id $LANG
+    --mini
+```
 
 ## Querying scripts 
 Two scripts are provided as examples of how to write parallelized queries over the data once it's been preprocessed: 
