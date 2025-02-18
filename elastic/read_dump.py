@@ -12,15 +12,10 @@ es = Elasticsearch([constants.ELASTICSEARCH_HOST])
 
 def read_dump():
     wiki_dump_file = constants.WIKIPEDIA_XML_BZ2_PATH
-    output_directory = os.path.join(
-        constants.PROCESSED_FILES_PATH, "extracted_wiki_articles"
-    )
+    
     max_article_len = int(constants.MAX_ARTICLE_LENGTH)
     max_abstract_len = int(constants.MAX_ABSTRACT_LENGTH)
 
-    # Create the folder if it did not exist
-    if not os.path.exists(output_directory):
-        os.makedirs(output_directory)
 
     def write_fa_dump(dump, _):
         with tqdm(desc="reading articles in dump") as p_bar:
