@@ -1,3 +1,7 @@
 ujson==5.1.0
 pathlib==1.0.1
 SPARQLWrapper
+mwxml
+wikitextparser
+tqdm
+elasticsearch
