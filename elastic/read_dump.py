@@ -10,14 +10,14 @@ es = Elasticsearch([constants.ELASTICSEARCH_HOST])
 
 
 
-def read_dump():
+def read_dump():    
     wiki_dump_file = constants.WIKIPEDIA_XML_BZ2_PATH
     
     max_article_len = int(constants.MAX_ARTICLE_LENGTH)
     max_abstract_len = int(constants.MAX_ABSTRACT_LENGTH)
 
-
-    def write_fa_dump(dump, _):
+    def write_fa_dump(dump, _):  
+        print("hereee")   
         with tqdm(desc="reading articles in dump") as p_bar:
             for page in dump:
                 for revision in page:
@@ -68,8 +68,9 @@ def read_dump():
     # path to the file
     paths = glob.glob(wiki_dump_file)
     try:
-        for rev_id, rev_timestamp, delta in mwxml.map(write_fa_dump, paths):
-            pass  # Nothing is done here because write_fa_dump works
+        print([constants.WIKIPEDIA_XML_BZ2_PATH])          
+        for id, namespace, title in mwxml.map(write_fa_dump, [constants.WIKIPEDIA_XML_BZ2_PATH]):
+            pass
     except Exception as e:
         print(f"an error occurred: {str(e)}")
 
