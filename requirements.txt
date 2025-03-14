@@ -5,3 +5,5 @@ mwxml
 wikitextparser
 tqdm
 elasticsearch
+piraye
+hazm

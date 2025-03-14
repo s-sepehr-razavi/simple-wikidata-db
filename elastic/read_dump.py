@@ -5,10 +5,44 @@ import glob
 from tqdm import tqdm
 import constants
 from elasticsearch import Elasticsearch
+from elasticsearch.helpers import streaming_bulk
+from piraye import NormalizerBuilder
+from hazm import sent_tokenize
+
 
 es = Elasticsearch([constants.ELASTICSEARCH_HOST])
+normalizer = NormalizerBuilder().alphabet_fa().digit_fa().punctuation_fa().tokenizing().remove_extra_spaces().build()
 
 
+def normalize_tokenize(text):
+    text = normalizer(text)
+    return sent_tokenize(text)
+
+
+def create_index():
+    """Create an Elasticsearch index with a mapping."""
+    if not es.indices.exists(index=constants.ELASTICSEARCH_INDEX):
+        mappings = {
+            "mappings": {
+                "properties": {
+                    "article_title": {"type": "text"},
+                    "sentence_id": {"type": "integer"},
+                    "sentence": {"type": "text"}
+                }
+            }
+        }
+        es.indices.create(index=constants.ELASTICSEARCH_INDEX, body=mappings)
+
+def convert_to_doc(title, text):
+    """Split text into sentences and index them."""
+    sentences = sent_tokenize(text)
+    for idx, sentence in enumerate(sentences):
+        doc = {
+            "article_title": title,
+            "sentence_id": idx,
+            "sentence": sentence
+        }        
+        yield doc
 
 def read_dump():    
     wiki_dump_file = constants.WIKIPEDIA_XML_BZ2_PATH
@@ -16,8 +50,9 @@ def read_dump():
     max_article_len = int(constants.MAX_ARTICLE_LENGTH)
     max_abstract_len = int(constants.MAX_ABSTRACT_LENGTH)
 
-    def write_fa_dump(dump, _):  
-        print("hereee")   
+    create_index()
+    
+    def write_fa_dump(dump, _):           
         with tqdm(desc="reading articles in dump") as p_bar:
             for page in dump:
                 for revision in page:
@@ -49,15 +84,10 @@ def read_dump():
                         if max_article_len != -1 and len(text) > max_article_len:
                             text = text[:max_article_len]
 
-                        # Prepare document for Elasticsearch
-                        doc = {
-                            "title": title,
-                            "abstract": abstract if len(abstract) > 0 else None,
-                            "content": text
-                        }
+                        
+                        for ok, action in streaming_bulk(client=es, index=constants.ELASTICSEARCH_INDEX, actions=convert_to_doc(title, text)):
+                            pass
 
-                        # Index document into Elasticsearch
-                        es.index(index=constants.ELASTICSEARCH_INDEX, id=page_id, body=doc)
 
                         p_bar.update(1)
 
