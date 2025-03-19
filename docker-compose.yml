@@ -1,0 +1,32 @@
+services:
+  elasticsearch:
+    image: elastic/elasticsearch:8.17.1
+    container_name: sepehr-elasticsearch
+    environment:
+      - node.name=sepehr-es
+      - cluster.name=sepehr-cluster
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms4g -Xmx4g
+      - xpack.security.enabled=false
+      - xpack.security.http.ssl.enabled=false
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    cap_add:
+      - IPC_LOCK
+    ports:
+      - 9200:9200
+      - 9300:9300
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -q '\"status\":\"green\"'"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+    restart: always
+    volumes:
+#      - ./elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+      - /data/elastic/elasticsearch-data:/usr/share/elasticsearch/data
