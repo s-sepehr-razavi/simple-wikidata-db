@@ -21,8 +21,8 @@ for (word1, word2), pair_id in word_pairs_dict.items():
     query = {
         "bool": {
             "must": [
-                {"match": {"content": word1}},  # Match word1 in content
-                {"match": {"content": word2}}   # Match word2 in content
+                {"match": {"sentence": word1}},  # Match word1 in content
+                {"match": {"sentence": word2}}   # Match word2 in content
             ]
         }
     }
