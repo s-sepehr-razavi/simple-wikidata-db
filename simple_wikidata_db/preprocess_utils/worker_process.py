@@ -179,6 +179,8 @@ def minimized_process_json(obj, language_id="fa"):
             l.append(alias['value'])
     aliases[id] = l 
 
+    if len(l) == 0:
+        return {}
     # extract claims
     # print(obj['claims'])
     for property_id in obj['claims']:
@@ -219,15 +221,16 @@ def minimized_process_json(obj, language_id="fa"):
 
 
 
-def process_data(language_id: str, work_queue: Queue, out_queue: Queue, restricted_properties, mini:bool):        
+def process_data(language_id: str, work_queue: Queue, out_queue: Queue, restricted_properties, mini:bool, stop_flag):        
     global RESTRICTED_PROPERTIES
     RESTRICTED_PROPERTIES = restricted_properties
     while True:
         json_obj = work_queue.get()
-        if json_obj is None:
+        if json_obj is None or stop_flag.value:
             break
         if len(json_obj) == 0:
             continue
-        out_queue.put(minimized_process_json(ujson.loads(json_obj), language_id,) if mini else process_json(ujson.loads(json_obj), language_id))
+        result = minimized_process_json(ujson.loads(json_obj), language_id,) if mini else process_json(ujson.loads(json_obj), language_id)        
+        out_queue.put(result)
     return
 

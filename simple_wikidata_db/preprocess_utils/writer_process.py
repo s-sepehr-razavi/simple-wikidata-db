@@ -54,18 +54,23 @@ class Writer:
         self.output_tables = {table_name: Table(path, batch_size, table_name, number_read_batches, last_batch_count) for table_name in (MINIMIZED_TABLE_NAMES if mini else TABLE_NAMES)}
         
 
-    def write(self, json_object: Dict[str, Any]):        
+    def write(self, json_object: Dict[str, Any], logging_path):        
         self.cur_num_lines += 1
         # print(self.cur_num_lines)
         for key, value in json_object.items():
             # print(key, value)                    
             if len(value) > 0:
                 self.output_tables[key].write(value)
-        if self.cur_num_lines % 200000 == 0:
+        to_count = 2
+        if self.cur_num_lines % to_count == 0:
             time_elapsed = time.time() - self.start_time
-            estimated_time = time_elapsed * (self.total_num_lines - self.cur_num_lines) / (200000*3600)
+            estimated_time = time_elapsed * (self.total_num_lines - self.cur_num_lines) / (to_count*3600)
             print(f"{self.cur_num_lines}/{self.total_num_lines} lines written in {time_elapsed:.2f}s. "
                   f"Estimated time to completion is {estimated_time:.2f} hours.")
+            with open(logging_path, "a") as log_file:
+                log_file.write(f"{self.cur_num_lines}/{self.total_num_lines} lines written in {time_elapsed:.2f}s.\n "
+                               f"Estimated time to completion is {estimated_time:.2f} hours.")
+                log_file.flush()
             self.start_time = time.time()
 
     def close(self):
@@ -75,16 +80,17 @@ class Writer:
             v.close()
 
 
-def write_data(path: Path, batch_size: int, total_num_lines: int, outout_queue: Queue, mini: bool, pre_read_lines):    
+def write_data(path: Path, batch_size: int, total_num_lines: int, outout_queue: Queue, mini: bool, pre_read_lines, stop_flag, logging_path):    
     writer = Writer(path, batch_size, total_num_lines, mini, pre_read_lines)    
     path_to_count = os.path.join(path, 'readObjCount.txt')
 
     while True:
         json_object = outout_queue.get()
-        # print(json_object)
-        if json_object is None:
+        # print(json_object)        
+        if json_object is None or stop_flag.value:
             break
-        writer.write(json_object)    
+        
+        writer.write(json_object, logging_path)    
         pre_read_lines += 1        
         with open(path_to_count, 'w') as file:
             file.write((str)(pre_read_lines))
