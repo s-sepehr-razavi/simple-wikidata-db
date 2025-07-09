@@ -19,19 +19,34 @@ def normalize_tokenize(text):
     return sent_tokenize(text)
 
 
-def create_index():
+def create_index(abstract=True):
     """Create an Elasticsearch index with a mapping."""
-    if not es.indices.exists(index=constants.ELASTICSEARCH_INDEX):
-        mappings = {
-            "mappings": {
-                "properties": {
-                    "article_title": {"type": "text"},
-                    "sentence_id": {"type": "integer"},
-                    "sentence": {"type": "text"}
+    if not abstract:
+        if not es.indices.exists(index=constants.ELASTICSEARCH_INDEX):
+            mappings = {
+                "mappings": {
+                    "properties": {
+                        "article_title": {"type": "text"},
+                        "sentence_id": {"type": "integer"},
+                        "sentence": {"type": "text"}
+                    }
                 }
             }
-        }
-        es.indices.create(index=constants.ELASTICSEARCH_INDEX, body=mappings)
+            es.indices.create(index=constants.ELASTICSEARCH_INDEX, body=mappings)
+    else:
+        if not es.indices.exists(index=constants.ELASTICSEARCH_INDEX):
+        # Define optional mappings and settings
+            mappings = {            
+                "mappings": {
+                    "properties": {
+                        "title": {"type": "text"},
+                        "abstract": {"type": "text"},
+                        "url": {"type": "keyword"},
+                        "timestamp": {"type": "date"}
+                    }
+                }
+            }
+            es.indices.create(index=constants.ELASTICSEARCH_INDEX, body=mappings)
 
 def convert_to_doc(title, text):
     """Split text into sentences and index them."""
@@ -52,8 +67,10 @@ def read_dump():
 
     create_index()
     
-    def write_fa_dump(dump, _):           
+    def write_fa_dump(dump, _): 
+        print(constants.ELASTICSEARCH_INDEX)                
         with tqdm(desc="reading articles in dump") as p_bar:
+            x = 0
             for page in dump:
                 for revision in page:
                     if revision.page.namespace != 0:
@@ -84,16 +101,21 @@ def read_dump():
                         if max_article_len != -1 and len(text) > max_article_len:
                             text = text[:max_article_len]
 
-                        
-                        for ok, action in streaming_bulk(client=es, index=constants.ELASTICSEARCH_INDEX, actions=convert_to_doc(title, text)):
-                            pass
 
+                        # for ok, action in streaming_bulk(client=es, index=constants.ELASTICSEARCH_INDEX, actions=convert_to_doc(title, text)):
+                        #     pass                      
+                        doc = {
+                            "title":title,
+                            "abstract": normalizer.normalize(abstract)
+                        }                        
+                        response = es.index(index=constants.ELASTICSEARCH_INDEX, document=doc)
 
                         p_bar.update(1)
-
+                    
                     except Exception as e:
                         print(f"An error occurred: {str(e)}")
 
+        print("All the data has been successfully processed!")
 
     # path to the file
     paths = glob.glob(wiki_dump_file)
